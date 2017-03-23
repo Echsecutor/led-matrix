@@ -25,14 +25,16 @@ def vertical_scroll(device, msg):
     show_message(device, msg, fill="white", font=proportional(LCD_FONT), scroll_delay=0.2)
 
     
-def horizontal_scroll(device, msg):
+def horizontal_scroll_msg(device, msg):
     logging.debug("horizontal scroll '{}'".format(msg))
     virtual = viewport(device, width=device.width, height=3*8)
     with canvas(virtual) as draw:
         text(draw, (0, 8), msg, fill="white", font=proportional(CP437_FONT))
-#        logging.debug("height: virtual: {}, device:{}".format(virtual.height, device.height))
+    horizontal_scroll(device, virtual)
+
+
+def horizontal_sroll(device, virtual):
     for i in range(virtual.height - device.height):
-#        logging.debug("set position 0,{}".format(i))
         virtual.set_position((0, i))
         time.sleep(0.2)
 
@@ -46,18 +48,32 @@ def display_img_from_file(device, img_dir, file_name):
 
 def display_img_from_url(device, url):
     r = requests.get(url)
-    Image.open(BytesIO(r.content))
+    img = Image.open(BytesIO(r.content))
     logging.debug("img loaded from {}".format(url))
     display_img(device, img)
 
 
 def display_img(device, img):
-    img = img.convert(mode="1").transform(size=device.size, method=Image.EXTENT, data=(0,0,32,8))
-    logging.debug("image mode: {}, device mode: {}".format(img.mode, device.mode))
-    logging.debug("image size: {}, device size: {}".format(img.size, device.size))
+    img_width, img_height = img.size
+    logging.debug("original image size: {} = ({}, {})".format(img.size, img_width, img_height))
+    dev_width, dev_height = device.size
+    scale = float(dev_width) / float(img_width)
+    logging.debug("scale: {}".format(scale))
+    
+    virtual = viewport(device, width=device.width, height=int(img_height*scale))
+    img = img.resize(virtual.size)
+    alpha_band = Image.new(mode="1", size=img.size)
+    alpha_band.putdata([0 for x in range(img.size[0]*img.size[1])])
+    img.putalpha(alpha_band)
+    img = img.convert(mode="1")
+    logging.debug("image mode: {}, device mode: {}".format(img.mode,
+                                                           device.mode))
+    logging.debug("image size: {}, device size: {}".format(img.size,
+                                                           device.size))
 
-    device.display(img)
-    time.sleep(5)
+    virtual.display(img)
+    horizontal_sroll(device, virtual)
+    time.sleep(2)
 
     
 def show_weather(device):
@@ -86,13 +102,13 @@ def show_greetings(device):
 def show_date(device):
     now = time.localtime()
     msg = "{:02}.{:02}.".format(now.tm_mday, now.tm_mon)
-    horizontal_scroll(device, msg)
+    horizontal_scroll_msg(device, msg)
 
 
 def show_time(device):
     now = time.localtime()
     msg = "{:02}:{:02}".format(now.tm_hour, now.tm_min)
-    horizontal_scroll(device, msg)
+    horizontal_scroll_msg(device, msg)
 
             
 def loop(device, display_actions):
@@ -105,7 +121,6 @@ def loop(device, display_actions):
             break
         except Exception as e:
             logging.error(e.message)
-            logging.error(e.args)
             time.sleep(1)
         
                 
@@ -119,6 +134,7 @@ def main():
     logging.basicConfig(**log_config)
     
     loop(device, [show_greetings, show_weather, show_time, show_date])
+    #loop(device, [show_weather])
 
 
 if __name__ == "__main__":
