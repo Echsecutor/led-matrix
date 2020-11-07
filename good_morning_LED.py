@@ -25,18 +25,18 @@ def vertical_scroll(device, msg):
     show_message(device, msg, fill="white", font=proportional(LCD_FONT), scroll_delay=0.2)
 
     
+def horizontal_sroll(device, virtual):
+    for i in range(virtual.height - device.height):
+        virtual.set_position((0, i))
+        time.sleep(0.2)
+
+
 def horizontal_scroll_msg(device, msg):
     logging.debug("horizontal scroll '{}'".format(msg))
     virtual = viewport(device, width=device.width, height=3*8)
     with canvas(virtual) as draw:
         text(draw, (0, 8), msg, fill="white", font=proportional(CP437_FONT))
-    horizontal_scroll(device, virtual)
-
-
-def horizontal_sroll(device, virtual):
-    for i in range(virtual.height - device.height):
-        virtual.set_position((0, i))
-        time.sleep(0.2)
+    horizontal_sroll(device, virtual)
 
 
 def display_img_from_file(device, img_dir, file_name):
@@ -117,7 +117,7 @@ def loop(device, display_actions):
             try:
                 action(device)
             except KeyboardInterrupt:
-                break
+                return
             except Exception as e:
                 logging.error(e.message)
             time.sleep(1)
