@@ -77,9 +77,9 @@ def display_img(device, img):
 
     
 def show_weather(device):
-    r = requests.get('http://api.openweathermap.org/data/2.5/weather?q=koln&APPID=ea53b55b32be6dcb7f97bc6497d398a1&units=metric').json()
+    r = requests.get('http://api.openweathermap.org/data/2.5/weather?q=cologne&APPID=ea53b55b32be6dcb7f97bc6497d398a1&units=metric').json()
     logging.debug(r)
-    msg = "{:.1f}°C".format(r["main"]["temp"])
+    msg = "{:.1f}°C {}".format(r["main"]["temp"], r["weather"][0]["main"])
     icon_url = "http://openweathermap.org/img/w/{}.png".format(r["weather"][0]["icon"])
     display_img_from_url(device, icon_url)
     vertical_scroll(device, msg)
@@ -113,14 +113,13 @@ def show_time(device):
             
 def loop(device, display_actions):
     while True:
-        try:
-            for action in display_actions:
+        for action in display_actions:
+            try:
                 action(device)
-                time.sleep(1)
-        except KeyboardInterrupt:
-            break
-        except Exception as e:
-            logging.error(e.message)
+            except KeyboardInterrupt:
+                break
+            except Exception as e:
+                logging.error(e.message)
             time.sleep(1)
         
                 
