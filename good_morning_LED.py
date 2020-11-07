@@ -19,6 +19,7 @@ import logging
 import requests
 import os
 
+API_TOKEN = ""
 
 def vertical_scroll(device, msg):
     logging.debug("vertical scroll '{}'".format(msg))
@@ -77,7 +78,7 @@ def display_img(device, img):
 
     
 def show_weather(device):
-    r = requests.get('http://api.openweathermap.org/data/2.5/weather?q=cologne&APPID=ea53b55b32be6dcb7f97bc6497d398a1&units=metric').json()
+    r = requests.get('http://api.openweathermap.org/data/2.5/weather?q=cologne&APPID=' + API_TOKEN + '&units=metric').json()
     logging.debug(r)
     msg = "{:.1f}°C {}".format(r["main"]["temp"], r["weather"][0]["main"])
     icon_url = "http://openweathermap.org/img/w/{}.png".format(r["weather"][0]["icon"])
@@ -150,8 +151,15 @@ if __name__ == "__main__":
         help="Set the log level. Default: INFO.",
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
         default="INFO")
+    parser.add_argument(
+        "-a",
+        "--API_TOKEN",
+        help="openweathermaps api token"
+    )
 
     args = parser.parse_args()
+
+    API_TOKEN = args.API_TOKEN
 
     logger_cfg["level"] = getattr(logging, args.log)
     logging.basicConfig(**logger_cfg)
