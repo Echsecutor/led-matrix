@@ -23,7 +23,7 @@ API_TOKEN = ""
 
 def vertical_scroll(device, msg):
     logging.debug("vertical scroll '{}'".format(msg))
-    show_message(device, msg, fill="white", font=proportional(LCD_FONT), scroll_delay=0.2)
+    show_message(device, msg, fill="white", font=proportional(LCD_FONT), scroll_delay=0.1)
 
     
 def horizontal_sroll(device, virtual):
@@ -80,10 +80,10 @@ def display_img(device, img):
 def show_weather(device):
     r = requests.get('http://api.openweathermap.org/data/2.5/weather?q=cologne&APPID=' + API_TOKEN + '&units=metric').json()
     logging.debug(r)
-    msg = "{:.1f}°C {}".format(r["main"]["temp"], r["weather"][0]["main"])
     icon_url = "http://openweathermap.org/img/w/{}.png".format(r["weather"][0]["icon"])
     display_img_from_url(device, icon_url)
-    vertical_scroll(device, msg)
+    horizontal_scroll_msg(device, "{:.1f}°C".format(r["main"]["temp"]))
+    vertical_scroll(device, r["weather"][0]["main"])
     
     
 def show_greetings(device):
