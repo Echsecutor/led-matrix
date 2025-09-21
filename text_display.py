@@ -3,9 +3,11 @@
 # Text Input LED Matrix Display Script
 # Based on LED matrix project by Sebastian Schmittner
 
+from __future__ import print_function
 import time
 import logging
 import argparse
+import sys
 
 from luma.led_matrix.device import max7219
 from luma.core.serial import spi, noop
@@ -13,6 +15,14 @@ from luma.core.render import canvas
 from luma.core.virtual import viewport
 from luma.core.legacy import text, show_message
 from luma.core.legacy.font import proportional, CP437_FONT, LCD_FONT
+
+# Python 2/3 compatibility for input function
+try:
+    # Python 2
+    input = raw_input
+except NameError:
+    # Python 3
+    pass
 
 
 def vertical_scroll(device, msg):
@@ -71,7 +81,10 @@ def get_user_input():
     print("  4. Quit")
 
     while True:
-        text_input = input("\nEnter your text: ").strip()
+        try:
+            text_input = input("\nEnter your text: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            return None, None
 
         if not text_input:
             print("Please enter some text.")
@@ -85,7 +98,10 @@ def get_user_input():
         print("2. Horizontal scroll")
         print("3. Static display")
 
-        mode_choice = input("Enter choice (1-3, default=1): ").strip()
+        try:
+            mode_choice = input("Enter choice (1-3, default=1): ").strip()
+        except (EOFError, KeyboardInterrupt):
+            return None, None
 
         mode_map = {
             '1': 'vertical',
@@ -124,10 +140,14 @@ def main():
             display_text(device, text_input, display_mode)
 
             # Ask if user wants to continue
-            continue_choice = input(
-                "\nDisplay another message? (y/n, default=y): ").strip().lower()
-            if continue_choice in ['n', 'no']:
-                print("Goodbye!")
+            try:
+                continue_choice = input(
+                    "\nDisplay another message? (y/n, default=y): ").strip().lower()
+                if continue_choice in ['n', 'no']:
+                    print("Goodbye!")
+                    break
+            except (EOFError, KeyboardInterrupt):
+                print("\nGoodbye!")
                 break
 
     except KeyboardInterrupt:
